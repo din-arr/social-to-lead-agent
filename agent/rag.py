@@ -1,188 +1,185 @@
-"""Advanced lead-flow message processor for AutoStream assistant.
+import json
+import os
+import pickle
+from typing import List, Dict
 
-This module keeps a backward-compatible ``process_message`` function while
-improving validation, state handling, and conversational resilience.
+import faiss
+from sentence_transformers import SentenceTransformer
+from dotenv import load_dotenv
+from google import genai
+
+load_dotenv()
+
+INDEX_PATH = "data/faiss_index.bin"
+DOCS_PATH = "data/retrieved_docs.pkl"
+EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
+
+_embedder = None
+
+
+def get_embedder():
+    global _embedder
+    if _embedder is None:
+        _embedder = SentenceTransformer(EMBED_MODEL_NAME)
+    return _embedder
+
+
+def get_genai_client():
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise ValueError("GOOGLE_API_KEY not found in environment/secrets")
+    return genai.Client(api_key=api_key)
+
+
+def load_knowledge_base() -> Dict:
+    with open("data/knowledge_base.json", "r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+def build_documents() -> List[str]:
+    kb = load_knowledge_base()
+    docs = []
+
+    plans = kb.get("plans", [])
+    for plan in plans:
+        plan_name = plan.get("name", "")
+        price = plan.get("price", "")
+        videos = plan.get("videos_per_month", "")
+        resolution = plan.get("resolution", "")
+        features = ", ".join(plan.get("features", [])) if plan.get("features") else "No extra features"
+
+        docs.append(
+            f"{plan_name}. Price: {price}. Usage: {videos}. "
+            f"Resolution: {resolution}. Features: {features}."
+        )
+
+    policies = kb.get("policies", [])
+    for policy in policies:
+        docs.append(f"Company policy: {policy}.")
+
+    docs.append("24/7 support is available only on the Pro plan.")
+
+    return docs
+
+
+def build_vector_store():
+    docs = build_documents()
+    embedder = get_embedder()
+    embeddings = embedder.encode(docs, convert_to_numpy=True).astype("float32")
+
+    dimension = embeddings.shape[1]
+    index = faiss.IndexFlatL2(dimension)
+    index.add(embeddings)
+
+    faiss.write_index(index, INDEX_PATH)
+
+    with open(DOCS_PATH, "wb") as file:
+        pickle.dump(docs, file)
+
+
+def ensure_vector_store():
+    if not os.path.exists(INDEX_PATH) or not os.path.exists(DOCS_PATH):
+        build_vector_store()
+
+
+def retrieve_context(user_message: str, top_k: int = 2) -> List[str]:
+    ensure_vector_store()
+
+    embedder = get_embedder()
+    query_embedding = embedder.encode([user_message], convert_to_numpy=True).astype("float32")
+    index = faiss.read_index(INDEX_PATH)
+
+    with open(DOCS_PATH, "rb") as file:
+        docs = pickle.load(file)
+
+    _, indices = index.search(query_embedding, top_k)
+
+    retrieved_docs = []
+    for idx in indices[0]:
+        if 0 <= idx < len(docs):
+            retrieved_docs.append(docs[idx])
+
+    return retrieved_docs
+
+
+def fallback_answer(user_message: str, context_docs: List[str]) -> str:
+    text = user_message.lower()
+
+    if "price" in text or "pricing" in text:
+        return (
+            "AutoStream has two plans:\n"
+            "- Basic Plan: $29/month\n"
+            "- Pro Plan: $79/month"
+        )
+
+    if "feature" in text or "features" in text:
+        return (
+            "Basic Plan has no extra features. "
+            "Pro Plan includes AI captions and 24/7 support."
+        )
+
+    if "refund" in text:
+        return "No refunds are available after 7 days."
+
+    if "support" in text:
+        return "24/7 support is available only on the Pro plan."
+
+    if "basic" in text and "pro" in text:
+        return (
+            "Basic Plan costs $29/month with 10 videos/month and 720p resolution. "
+            "Pro Plan costs $79/month with unlimited videos, 4K resolution, AI captions, and 24/7 support."
+        )
+
+    if "basic plan" in text:
+        return "Basic Plan costs $29/month, includes 10 videos/month, and supports 720p resolution."
+
+    if "pro plan" in text:
+        return "Pro Plan costs $79/month, includes unlimited videos, 4K resolution, AI captions, and 24/7 support."
+
+    if context_docs:
+        return "Here’s what I found:\n" + "\n".join(f"- {doc}" for doc in context_docs)
+
+    return "Sorry, that detail is not available in the current knowledge base."
+
+
+def generate_answer_from_context(user_message: str, context_docs: List[str]) -> str:
+    if not context_docs:
+        return "Sorry, that detail is not available in the current knowledge base."
+
+    context = "\n".join(context_docs)
+
+    prompt = f"""
+You are an AI sales assistant for AutoStream.
+
+Answer the user's question using ONLY the context below.
+If the answer is not present in the context, reply exactly:
+Sorry, that detail is not available in the current knowledge base.
+
+Context:
+{context}
+
+User Question:
+{user_message}
+
+Give a short, clear, professional answer.
 """
 
-from __future__ import annotations
-
-import re
-from dataclasses import dataclass
-from typing import Any, Callable, Dict, Mapping
-
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-NAME_RE = re.compile(r"^[A-Za-z][A-Za-z\s'\-]{1,79}$")
-
-PLATFORM_ALIASES: Mapping[str, str] = {
-    "youtube": "YouTube",
-    "yt": "YouTube",
-    "instagram": "Instagram",
-    "insta": "Instagram",
-    "ig": "Instagram",
-    "tiktok": "TikTok",
-    "tik tok": "TikTok",
-    "linkedin": "LinkedIn",
-    "facebook": "Facebook",
-    "fb": "Facebook",
-}
-
-SUPPORTED_PLATFORMS = ("YouTube", "Instagram", "TikTok", "LinkedIn", "Facebook")
-
-
-@dataclass(frozen=True)
-class LeadStages:
-    NONE: str = ""
-    AWAITING_NAME: str = "awaiting_name"
-    AWAITING_EMAIL: str = "awaiting_email"
-    AWAITING_PLATFORM: str = "awaiting_platform"
-    COMPLETED: str = "completed"
-
-
-STAGES = LeadStages()
-
-
-def is_valid_email(email: str) -> bool:
-    return bool(EMAIL_RE.match(email.strip()))
-
-
-def is_valid_name(name: str) -> bool:
-    return bool(NAME_RE.match(name.strip()))
-
-
-def detect_platform(text: str) -> str:
-    lowered = text.lower().strip()
-
-    # Try exact matches first for speed and precision.
-    if lowered in PLATFORM_ALIASES:
-        return PLATFORM_ALIASES[lowered]
-
-    for alias, normalized in PLATFORM_ALIASES.items():
-        if alias in lowered:
-            return normalized
-
-    return ""
-
-
-def _default_intent_classifier(_: str) -> str:
-    return "unknown"
-
-
-def _default_retriever(_: str) -> str:
-    return (
-        "I can help with pricing, features, refunds, or onboarding. "
-        "Could you share what you want to know?"
-    )
-
-
-def _default_lead_capture(name: str, email: str, platform: str) -> Dict[str, str]:
-    return {
-        "message": (
-            f"Thanks {name}! We captured your details ({email}) for {platform}. "
-            "Our team will reach out shortly."
-        )
-    }
-
-
-def _normalize_state(state: Dict[str, Any]) -> Dict[str, Any]:
-    state.setdefault("messages", [])
-    state.setdefault("lead_captured", False)
-    state.setdefault("lead_stage", STAGES.NONE)
-    state.setdefault("intent", "unknown")
-    state.setdefault("platform", "")
-    return state
-
-
-def process_message(
-    state: Dict[str, Any],
-    user_message: str,
-    *,
-    classify_intent_fn: Callable[[str], str] | None = None,
-    retrieve_answer_fn: Callable[[str], str] | None = None,
-    lead_capture_fn: Callable[[str, str, str], Dict[str, str]] | None = None,
-) -> str:
-    """Process a single user message while updating the mutable conversation state."""
-    classify_intent_fn = classify_intent_fn or _default_intent_classifier
-    retrieve_answer_fn = retrieve_answer_fn or _default_retriever
-    lead_capture_fn = lead_capture_fn or _default_lead_capture
-
-    state = _normalize_state(state)
-
-    message = user_message.strip()
-    if not message:
-        return "Please send a message so I can help you."
-
-    state["messages"].append({"role": "user", "content": message})
-
-    if state["lead_captured"]:
-        return "Your lead has already been captured successfully."
-
-    intent = classify_intent_fn(message)
-    state["intent"] = intent
-
-    detected_platform = detect_platform(message)
-    if detected_platform and not state.get("platform"):
-        state["platform"] = detected_platform
-
-    stage = state.get("lead_stage", STAGES.NONE)
-
-    if intent == "product_inquiry" and stage == STAGES.NONE:
-        return retrieve_answer_fn(message)
-
-    if intent == "greeting" and stage == STAGES.NONE:
-        return (
-            "Hi! I can help with AutoStream pricing, features, refunds, "
-            "and sign-up."
+    try:
+        client = get_genai_client()
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
         )
 
-    if intent == "high_intent_lead" and stage == STAGES.NONE:
-        state["lead_stage"] = STAGES.AWAITING_NAME
-        return "Great! You're interested in AutoStream. May I have your full name?"
+        if hasattr(response, "text") and response.text:
+            return response.text.strip()
 
-    if stage == STAGES.AWAITING_NAME:
-        if not is_valid_name(message):
-            return "Please share your real name (letters, spaces, apostrophes, or hyphens)."
+    except Exception:
+        pass
 
-        state["name"] = message
-        state["lead_stage"] = STAGES.AWAITING_EMAIL
-        return "Thanks! Please share your best email address."
+    return fallback_answer(user_message, context_docs)
 
-    if stage == STAGES.AWAITING_EMAIL:
-        if not is_valid_email(message):
-            return "Please share a valid email address (example: name@domain.com)."
 
-        state["email"] = message.lower()
-
-        if state.get("platform"):
-            result = lead_capture_fn(state["name"], state["email"], state["platform"])
-            state["lead_captured"] = True
-            state["lead_stage"] = STAGES.COMPLETED
-            return result["message"]
-
-        state["lead_stage"] = STAGES.AWAITING_PLATFORM
-        return (
-            "Thanks! Which creator platform do you use most? "
-            f"({', '.join(SUPPORTED_PLATFORMS)})"
-        )
-
-    if stage == STAGES.AWAITING_PLATFORM:
-        state["platform"] = detected_platform or message.title()
-
-        result = lead_capture_fn(state["name"], state["email"], state["platform"])
-        state["lead_captured"] = True
-        state["lead_stage"] = STAGES.COMPLETED
-        return result["message"]
-
-    # Handle mixed intent during lead capture by answering then guiding back.
-    if intent == "product_inquiry" and stage != STAGES.NONE:
-        answer = retrieve_answer_fn(message)
-        prompts = {
-            STAGES.AWAITING_NAME: "When you're ready, please share your full name.",
-            STAGES.AWAITING_EMAIL: "When you're ready, please share your email address.",
-            STAGES.AWAITING_PLATFORM: "When you're ready, tell me your creator platform.",
-        }
-        return f"{answer}\n\n{prompts.get(stage, '')}".strip()
-
-    return (
-        "Sorry, I didn’t fully understand that. You can ask about pricing, features, "
-        "refunds, or say you want to get started."
-    )
+def retrieve_answer(user_message: str) -> str:
+    context_docs = retrieve_context(user_message, top_k=2)
+    return generate_answer_from_context(user_message, context_docs)
