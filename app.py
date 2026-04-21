@@ -10,75 +10,114 @@ st.set_page_config(
 st.markdown("""
 <style>
     .stApp {
-        background: linear-gradient(180deg, #07111f 0%, #0a1020 100%);
+        background: linear-gradient(180deg, #06101d 0%, #0a1224 100%);
         color: white;
     }
 
     section[data-testid="stSidebar"] {
-        background: #232633;
+        background: #222633;
         border-right: 1px solid rgba(255,255,255,0.08);
     }
 
-    .main-title {
+    .hero-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        padding: 28px 32px;
+        margin-bottom: 22px;
+    }
+
+    .hero-title {
         font-size: 4rem;
         font-weight: 800;
         color: white;
-        margin-bottom: 0.25rem;
-        line-height: 1.1;
+        line-height: 1.05;
+        margin-bottom: 0.4rem;
     }
 
-    .sub-title {
+    .hero-subtitle {
         font-size: 1.15rem;
-        color: #b8bfd3;
-        margin-bottom: 2rem;
+        color: #b7bfd3;
+        margin-bottom: 0;
+    }
+
+    .section-label {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #d9dff0;
+        margin-top: 0.5rem;
+        margin-bottom: 0.75rem;
     }
 
     .info-card {
         background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 16px;
         padding: 14px 16px;
-        border-radius: 14px;
         margin-bottom: 12px;
-        border: 1px solid rgba(255,255,255,0.06);
         color: white;
     }
 
-    .quick-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #d8deee;
-        margin-top: 0.5rem;
-        margin-bottom: 0.8rem;
+    .bot-card {
+        background: rgba(255, 166, 0, 0.10);
+        border: 1px solid rgba(255, 166, 0, 0.22);
+        border-radius: 18px;
+        padding: 16px 18px;
+        margin: 10px 0 14px 0;
+        color: white;
+    }
+
+    .user-card {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        padding: 16px 18px;
+        margin: 10px 0 14px 0;
+        color: white;
+    }
+
+    .msg-row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .msg-icon {
+        font-size: 1.5rem;
+        line-height: 1;
+        margin-top: 2px;
+    }
+
+    .msg-text {
+        font-size: 1.05rem;
+        line-height: 1.7;
+        word-break: break-word;
+    }
+
+    .quick-tip {
+        color: #aeb7cb;
+        font-size: 0.95rem;
+        margin-top: 0.25rem;
+        margin-bottom: 1rem;
     }
 
     .stButton > button {
         width: 100%;
-        border-radius: 12px;
+        border-radius: 14px;
         border: 1px solid rgba(255,255,255,0.08);
-        background: #1a2030;
+        background: #1a2132;
         color: white;
         font-weight: 600;
-        padding: 0.65rem 1rem;
+        padding: 0.7rem 1rem;
     }
 
     .stButton > button:hover {
-        border-color: #ff9d00;
-        color: #ffcc70;
+        border-color: #ffab2d;
+        color: #ffd27a;
     }
 
-    .stChatMessage {
-        background: transparent !important;
-    }
-
-    [data-testid="stChatInput"] {
-        border-top: 1px solid rgba(255,255,255,0.08);
-        padding-top: 0.75rem;
-    }
-
-    .helper-text {
-        color: #aeb7cb;
-        font-size: 0.95rem;
-        margin-top: 0.5rem;
-        margin-bottom: 1rem;
+    div[data-testid="stChatInput"] {
+        margin-top: 18px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -133,33 +172,50 @@ def reset_chat():
     st.session_state.quick_prompt = ""
 
 
+def render_message(role: str, content: str):
+    card_class = "bot-card" if role == "assistant" else "user-card"
+    icon = "🤖" if role == "assistant" else "👤"
+    safe_content = content.replace("\n", "<br>")
+    st.markdown(
+        f"""
+        <div class="{card_class}">
+            <div class="msg-row">
+                <div class="msg-icon">{icon}</div>
+                <div class="msg-text">{safe_content}</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
 initialize_state()
 
 with st.sidebar:
     st.markdown("## Session Info")
 
     st.markdown(
-        f'<div class="info-card"><b>Current Intent:</b> {st.session_state.agent_state.get("intent", "") or "Not detected yet"}</div>',
+        f'<div class="info-card"><b>Current Intent:</b><br>{st.session_state.agent_state.get("intent", "") or "Not detected yet"}</div>',
         unsafe_allow_html=True
     )
     st.markdown(
-        f'<div class="info-card"><b>Name:</b> {st.session_state.agent_state.get("name", "") or "Not provided"}</div>',
+        f'<div class="info-card"><b>Name:</b><br>{st.session_state.agent_state.get("name", "") or "Not provided"}</div>',
         unsafe_allow_html=True
     )
     st.markdown(
-        f'<div class="info-card"><b>Email:</b> {st.session_state.agent_state.get("email", "") or "Not provided"}</div>',
+        f'<div class="info-card"><b>Email:</b><br>{st.session_state.agent_state.get("email", "") or "Not provided"}</div>',
         unsafe_allow_html=True
     )
     st.markdown(
-        f'<div class="info-card"><b>Platform:</b> {st.session_state.agent_state.get("platform", "") or "Not provided"}</div>',
+        f'<div class="info-card"><b>Platform:</b><br>{st.session_state.agent_state.get("platform", "") or "Not provided"}</div>',
         unsafe_allow_html=True
     )
     st.markdown(
-        f'<div class="info-card"><b>Lead Stage:</b> {st.session_state.agent_state.get("lead_stage", "") or "Not started"}</div>',
+        f'<div class="info-card"><b>Lead Stage:</b><br>{st.session_state.agent_state.get("lead_stage", "") or "Not started"}</div>',
         unsafe_allow_html=True
     )
     st.markdown(
-        f'<div class="info-card"><b>Lead Captured:</b> {"Yes ✅" if st.session_state.agent_state.get("lead_captured", False) else "No ❌"}</div>',
+        f'<div class="info-card"><b>Lead Captured:</b><br>{"Yes ✅" if st.session_state.agent_state.get("lead_captured", False) else "No ❌"}</div>',
         unsafe_allow_html=True
     )
 
@@ -169,61 +225,64 @@ with st.sidebar:
         reset_chat()
         st.rerun()
 
-st.markdown('<div class="main-title">🤖 AutoStream AI Agent</div>', unsafe_allow_html=True)
-st.markdown(
-    '<div class="sub-title">Conversational AI for product queries, lead qualification, and lead capture.</div>',
-    unsafe_allow_html=True
-)
+left, center, right = st.columns([1, 3.8, 1])
 
-st.markdown('<div class="quick-title">Quick Actions</div>', unsafe_allow_html=True)
+with center:
+    st.markdown(
+        """
+        <div class="hero-card">
+            <div class="hero-title">🤖 AutoStream AI Agent</div>
+            <div class="hero-subtitle">
+                Conversational AI for product queries, lead qualification, and lead capture.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-col1, col2, col3, col4 = st.columns(4)
+    st.markdown('<div class="section-label">Quick Actions</div>', unsafe_allow_html=True)
+    c1, c2, c3, c4 = st.columns(4)
 
-if col1.button("Pricing"):
-    st.session_state.quick_prompt = "Tell me about pricing"
+    if c1.button("Pricing"):
+        st.session_state.quick_prompt = "Tell me about pricing"
 
-if col2.button("Features"):
-    st.session_state.quick_prompt = "What features are included?"
+    if c2.button("Features"):
+        st.session_state.quick_prompt = "What features are included?"
 
-if col3.button("Refund Policy"):
-    st.session_state.quick_prompt = "What is your refund policy?"
+    if c3.button("Refund Policy"):
+        st.session_state.quick_prompt = "What is your refund policy?"
 
-if col4.button("Start Signup"):
-    st.session_state.quick_prompt = "start"
+    if c4.button("Start Signup"):
+        st.session_state.quick_prompt = "start"
 
-st.markdown(
-    '<div class="helper-text">Try asking about pricing, features, refunds, or click <b>Start Signup</b> to begin lead capture.</div>',
-    unsafe_allow_html=True
-)
+    st.markdown(
+        '<div class="quick-tip">Try asking about pricing, features, refunds, or click <b>Start Signup</b> to begin the lead flow.</div>',
+        unsafe_allow_html=True
+    )
 
-for message in st.session_state.chat_history:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    for message in st.session_state.chat_history:
+        render_message(message["role"], message["content"])
 
-user_input = st.chat_input("Type your message here...")
+    user_input = st.chat_input("Type your message here...")
 
-if st.session_state.quick_prompt:
-    user_input = st.session_state.quick_prompt
-    st.session_state.quick_prompt = ""
+    if st.session_state.quick_prompt:
+        user_input = st.session_state.quick_prompt
+        st.session_state.quick_prompt = ""
 
-if user_input:
-    st.session_state.chat_history.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
-        st.markdown(user_input)
+    if user_input:
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
+        render_message("user", user_input)
 
-    try:
-        response = process_message(st.session_state.agent_state, user_input)
+        try:
+            response = process_message(st.session_state.agent_state, user_input)
 
-        st.session_state.chat_history.append({"role": "assistant", "content": response})
-        with st.chat_message("assistant"):
-            st.markdown(response)
+            st.session_state.chat_history.append({"role": "assistant", "content": response})
+            render_message("assistant", response)
 
-        if st.session_state.agent_state.get("lead_captured", False):
-            st.success("Lead captured successfully.")
+            if st.session_state.agent_state.get("lead_captured", False):
+                st.success("Lead captured successfully.")
 
-    except Exception as e:
-        error_message = f"An error occurred: {str(e)}"
-        st.session_state.chat_history.append({"role": "assistant", "content": error_message})
-
-        with st.chat_message("assistant"):
+        except Exception as e:
+            error_message = f"An error occurred: {str(e)}"
+            st.session_state.chat_history.append({"role": "assistant", "content": error_message})
             st.error(error_message)
