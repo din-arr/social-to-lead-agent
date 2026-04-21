@@ -34,46 +34,43 @@ def process_message(state, user_message: str) -> str:
     user_message = user_message.strip()
     state["messages"].append({"role": "user", "content": user_message})
 
-    if state.get("lead_captured", False):
-        return "Your lead has already been captured successfully."
-
     if "lead_stage" not in state:
         state["lead_stage"] = ""
 
     text = user_message.lower().strip()
     intent = classify_intent(user_message)
 
-    # Manual override for common signup/start triggers
     if any(trigger in text for trigger in ["start", "get started", "signup", "sign up", "register", "join now"]):
         intent = "high_intent_lead"
 
     state["intent"] = intent
+
+    if state.get("lead_captured", False):
+        if intent == "product_inquiry":
+            return retrieve_answer(user_message)
+
+        return "Your lead has already been captured successfully. You can still ask about pricing, features, or refunds."
 
     if not state.get("platform"):
         detected_platform = detect_platform(user_message)
         if detected_platform:
             state["platform"] = detected_platform
 
-    # Greeting only when not already inside lead flow
     if intent == "greeting" and state.get("lead_stage") == "":
         return "Hi! I can help you with AutoStream pricing, features, refunds, and sign-up."
 
-    # Normal product query
     if intent == "product_inquiry" and state.get("lead_stage") == "":
         return retrieve_answer(user_message)
 
-    # Start lead flow
     if intent == "high_intent_lead" and state.get("lead_stage") == "":
         state["lead_stage"] = "awaiting_name"
         return "Great! You're interested in AutoStream. May I have your name?"
 
-    # Step 1: Name
     if state.get("lead_stage") == "awaiting_name":
         state["name"] = user_message
         state["lead_stage"] = "awaiting_email"
         return "Thanks! Please share your email address."
 
-    # Step 2: Email
     if state.get("lead_stage") == "awaiting_email":
         if not is_valid_email(user_message):
             return "Please share a valid email address."
@@ -93,7 +90,6 @@ def process_message(state, user_message: str) -> str:
         state["lead_stage"] = "awaiting_platform"
         return "Thanks! Which creator platform do you use? (YouTube, Instagram, TikTok, LinkedIn, Facebook)"
 
-    # Step 3: Platform
     if state.get("lead_stage") == "awaiting_platform":
         detected_platform = detect_platform(user_message)
         if detected_platform:
@@ -110,7 +106,6 @@ def process_message(state, user_message: str) -> str:
         state["lead_stage"] = "completed"
         return result["message"]
 
-    # If user asks product question during lead flow
     if intent == "product_inquiry" and state.get("lead_stage") != "":
         answer = retrieve_answer(user_message)
 
