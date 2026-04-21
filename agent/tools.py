@@ -1,7 +1,5 @@
 def mock_lead_capture(name, email, platform):
-    message = f"Lead captured successfully: {name}, {email}, {platform}"
-    print(message)
     return {
         "status": "success",
-        "message": message
+        "message": f"Thanks {name}! Your interest for {platform} has been recorded. Our team will contact you at {email} soon."
     }

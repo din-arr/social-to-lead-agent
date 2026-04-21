@@ -4,8 +4,84 @@ from agent.graph import process_message
 st.set_page_config(
     page_title="AutoStream AI Agent",
     page_icon="🤖",
-    layout="centered"
+    layout="wide"
 )
+
+st.markdown("""
+<style>
+    .stApp {
+        background: linear-gradient(180deg, #07111f 0%, #0a1020 100%);
+        color: white;
+    }
+
+    section[data-testid="stSidebar"] {
+        background: #232633;
+        border-right: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .main-title {
+        font-size: 4rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 0.25rem;
+        line-height: 1.1;
+    }
+
+    .sub-title {
+        font-size: 1.15rem;
+        color: #b8bfd3;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: rgba(255,255,255,0.04);
+        padding: 14px 16px;
+        border-radius: 14px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(255,255,255,0.06);
+        color: white;
+    }
+
+    .quick-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #d8deee;
+        margin-top: 0.5rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .stButton > button {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: #1a2030;
+        color: white;
+        font-weight: 600;
+        padding: 0.65rem 1rem;
+    }
+
+    .stButton > button:hover {
+        border-color: #ff9d00;
+        color: #ffcc70;
+    }
+
+    .stChatMessage {
+        background: transparent !important;
+    }
+
+    [data-testid="stChatInput"] {
+        border-top: 1px solid rgba(255,255,255,0.08);
+        padding-top: 0.75rem;
+    }
+
+    .helper-text {
+        color: #aeb7cb;
+        font-size: 0.95rem;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 
 def initialize_state():
@@ -31,6 +107,9 @@ def initialize_state():
             }
         ]
 
+    if "quick_prompt" not in st.session_state:
+        st.session_state.quick_prompt = ""
+
 
 def reset_chat():
     st.session_state.agent_state = {
@@ -51,24 +130,37 @@ def reset_chat():
             )
         }
     ]
+    st.session_state.quick_prompt = ""
 
 
 initialize_state()
 
-st.title("🤖 AutoStream AI Agent")
-st.caption("Conversational AI for product queries, lead qualification, and lead capture.")
-
 with st.sidebar:
-    st.header("Session Info")
+    st.markdown("## Session Info")
 
-    st.write("**Current Intent:**", st.session_state.agent_state.get("intent", "") or "Not detected yet")
-    st.write("**Name:**", st.session_state.agent_state.get("name", "") or "Not provided")
-    st.write("**Email:**", st.session_state.agent_state.get("email", "") or "Not provided")
-    st.write("**Platform:**", st.session_state.agent_state.get("platform", "") or "Not provided")
-    st.write("**Lead Stage:**", st.session_state.agent_state.get("lead_stage", "") or "Not started")
-    st.write(
-        "**Lead Captured:**",
-        "Yes ✅" if st.session_state.agent_state.get("lead_captured", False) else "No ❌"
+    st.markdown(
+        f'<div class="info-card"><b>Current Intent:</b> {st.session_state.agent_state.get("intent", "") or "Not detected yet"}</div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        f'<div class="info-card"><b>Name:</b> {st.session_state.agent_state.get("name", "") or "Not provided"}</div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        f'<div class="info-card"><b>Email:</b> {st.session_state.agent_state.get("email", "") or "Not provided"}</div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        f'<div class="info-card"><b>Platform:</b> {st.session_state.agent_state.get("platform", "") or "Not provided"}</div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        f'<div class="info-card"><b>Lead Stage:</b> {st.session_state.agent_state.get("lead_stage", "") or "Not started"}</div>',
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        f'<div class="info-card"><b>Lead Captured:</b> {"Yes ✅" if st.session_state.agent_state.get("lead_captured", False) else "No ❌"}</div>',
+        unsafe_allow_html=True
     )
 
     st.divider()
@@ -77,11 +169,42 @@ with st.sidebar:
         reset_chat()
         st.rerun()
 
+st.markdown('<div class="main-title">🤖 AutoStream AI Agent</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="sub-title">Conversational AI for product queries, lead qualification, and lead capture.</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown('<div class="quick-title">Quick Actions</div>', unsafe_allow_html=True)
+
+col1, col2, col3, col4 = st.columns(4)
+
+if col1.button("Pricing"):
+    st.session_state.quick_prompt = "Tell me about pricing"
+
+if col2.button("Features"):
+    st.session_state.quick_prompt = "What features are included?"
+
+if col3.button("Refund Policy"):
+    st.session_state.quick_prompt = "What is your refund policy?"
+
+if col4.button("Start Signup"):
+    st.session_state.quick_prompt = "start"
+
+st.markdown(
+    '<div class="helper-text">Try asking about pricing, features, refunds, or click <b>Start Signup</b> to begin lead capture.</div>',
+    unsafe_allow_html=True
+)
+
 for message in st.session_state.chat_history:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
 user_input = st.chat_input("Type your message here...")
+
+if st.session_state.quick_prompt:
+    user_input = st.session_state.quick_prompt
+    st.session_state.quick_prompt = ""
 
 if user_input:
     st.session_state.chat_history.append({"role": "user", "content": user_input})
