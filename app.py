@@ -11,66 +11,66 @@ st.markdown("""
 <style>
 
     .stApp {
-        background: #0b1220;
-        color: #e5e7eb;
+        background: #fffdf7;
+        color: #2c2c2c;
     }
 
     header[data-testid="stHeader"] {
-        background: #0b1220 !important;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+        background: #ffffff !important;
+        border-bottom: 1px solid #f1f1f1;
     }
 
     section[data-testid="stSidebar"] {
-        background: #0f172a;
-        border-right: 1px solid rgba(255,255,255,0.05);
+        background: #fff8ec;
+        border-right: 1px solid #f3e6d2;
     }
 
     .hero-card {
-        background: #111827;
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 18px;
+        background: white;
+        border: 1px solid #f3e6d2;
+        border-radius: 16px;
         padding: 28px;
         margin-bottom: 20px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.04);
     }
 
     .hero-title {
         font-size: 2.6rem;
         font-weight: 700;
-        color: #f9fafb;
-        margin-bottom: 8px;
+        color: #2c2c2c;
+        margin-bottom: 6px;
     }
 
     .hero-subtitle {
-        color: #9ca3af;
+        color: #7a7a7a;
         font-size: 1rem;
     }
 
     .section-label {
         font-weight: 600;
-        color: #cbd5e1;
+        color: #444;
         margin-bottom: 8px;
     }
 
     .info-card {
-        background: #111827;
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 12px;
+        background: white;
+        border: 1px solid #f0e4cf;
+        border-radius: 10px;
         padding: 12px;
         margin-bottom: 10px;
-        color: #cbd5e1;
+        color: #444;
     }
 
     .bot-card {
-        background: #1e293b;
-        border: 1px solid rgba(255,255,255,0.06);
+        background: #fff8ec;
+        border: 1px solid #f0e4cf;
         border-radius: 14px;
         padding: 14px;
         margin: 10px 0;
-        color: #e5e7eb;
     }
 
     .user-card {
-        background: #1e40af;
+        background: #ff8c2a;
         border-radius: 14px;
         padding: 14px;
         margin: 10px 0;
@@ -85,37 +85,36 @@ st.markdown("""
 
     .msg-icon {
         font-size: 1.2rem;
-        line-height: 1.4;
     }
 
     .msg-text {
         font-size: 0.95rem;
         line-height: 1.6;
-        word-break: break-word;
     }
 
     .stButton > button {
-        background: #1f2937;
-        border: 1px solid rgba(255,255,255,0.06);
-        color: #e5e7eb;
+        background: white;
+        border: 1px solid #f0e4cf;
+        color: #444;
         border-radius: 10px;
         width: 100%;
-        font-weight: 600;
     }
 
     .stButton > button:hover {
-        background: #2563eb;
+        background: #ff8c2a;
         color: white;
+        border-color: #ff8c2a;
     }
 
     div[data-testid="stChatInput"] textarea {
-        background: #111827 !important;
-        color: white !important;
+        background: white !important;
+        color: black !important;
         border-radius: 10px !important;
+        border: 1px solid #f0e4cf !important;
     }
 
     div[data-testid="stChatInput"] button {
-        background: #2563eb !important;
+        background: #ff8c2a !important;
         color: white !important;
     }
 
@@ -197,32 +196,11 @@ initialize_state()
 with st.sidebar:
     st.markdown("## Session Info")
 
-    st.markdown(
-        f'<div class="info-card"><b>Current Intent:</b><br>{st.session_state.agent_state.get("intent", "") or "Not detected yet"}</div>',
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        f'<div class="info-card"><b>Name:</b><br>{st.session_state.agent_state.get("name", "") or "Not provided"}</div>',
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        f'<div class="info-card"><b>Email:</b><br>{st.session_state.agent_state.get("email", "") or "Not provided"}</div>',
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        f'<div class="info-card"><b>Platform:</b><br>{st.session_state.agent_state.get("platform", "") or "Not provided"}</div>',
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        f'<div class="info-card"><b>Lead Stage:</b><br>{st.session_state.agent_state.get("lead_stage", "") or "Not started"}</div>',
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        f'<div class="info-card"><b>Lead Captured:</b><br>{"Yes ✅" if st.session_state.agent_state.get("lead_captured", False) else "No ❌"}</div>',
-        unsafe_allow_html=True
-    )
-
-    st.divider()
+    st.markdown(f'<div class="info-card"><b>Intent:</b><br>{st.session_state.agent_state.get("intent","-")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="info-card"><b>Name:</b><br>{st.session_state.agent_state.get("name","-")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="info-card"><b>Email:</b><br>{st.session_state.agent_state.get("email","-")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="info-card"><b>Platform:</b><br>{st.session_state.agent_state.get("platform","-")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="info-card"><b>Lead:</b><br>{"Captured ✅" if st.session_state.agent_state.get("lead_captured") else "Not yet"}</div>', unsafe_allow_html=True)
 
     if st.button("Reset Chat"):
         reset_chat()
@@ -231,39 +209,33 @@ with st.sidebar:
 left, center, right = st.columns([1, 3.8, 1])
 
 with center:
-    st.markdown(
-        """
+    st.markdown("""
         <div class="hero-card">
-            <div class="hero-title">🤖 AutoStream AI Agent</div>
+            <div class="hero-title">AutoStream AI Agent</div>
             <div class="hero-subtitle">
-                Conversational AI for product queries, lead qualification, and lead capture.
+                Conversational AI for product queries and lead capture
             </div>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
 
-    st.markdown('<div class="section-label">Quick Actions</div>', unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
 
     if c1.button("Pricing"):
-        st.session_state.quick_prompt = "Tell me about pricing"
+        st.session_state.quick_prompt = "pricing"
 
     if c2.button("Features"):
-        st.session_state.quick_prompt = "What features are included?"
+        st.session_state.quick_prompt = "features"
 
-    if c3.button("Refund Policy"):
-        st.session_state.quick_prompt = "What is your refund policy?"
+    if c3.button("Refund"):
+        st.session_state.quick_prompt = "refund"
 
-    if c4.button("Start Signup"):
+    if c4.button("Start"):
         st.session_state.quick_prompt = "start"
 
-    st.caption("Try pricing, features, refunds, or start the signup flow.")
+    for msg in st.session_state.chat_history:
+        render_message(msg["role"], msg["content"])
 
-    for message in st.session_state.chat_history:
-        render_message(message["role"], message["content"])
-
-    user_input = st.chat_input("Type your message here...")
+    user_input = st.chat_input("Type your message...")
 
     if st.session_state.quick_prompt:
         user_input = st.session_state.quick_prompt
@@ -273,16 +245,10 @@ with center:
         st.session_state.chat_history.append({"role": "user", "content": user_input})
         render_message("user", user_input)
 
-        try:
-            response = process_message(st.session_state.agent_state, user_input)
+        response = process_message(st.session_state.agent_state, user_input)
 
-            st.session_state.chat_history.append({"role": "assistant", "content": response})
-            render_message("assistant", response)
+        st.session_state.chat_history.append({"role": "assistant", "content": response})
+        render_message("assistant", response)
 
-            if st.session_state.agent_state.get("lead_captured", False):
-                st.success("Lead captured successfully.")
-
-        except Exception as e:
-            error_message = f"An error occurred: {str(e)}"
-            st.session_state.chat_history.append({"role": "assistant", "content": error_message})
-            st.error(error_message)
+        if st.session_state.agent_state.get("lead_captured"):
+            st.success("Lead captured successfully")
