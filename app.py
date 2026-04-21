@@ -18,22 +18,26 @@ st.markdown("""
 
     .stApp {
         background:
-            radial-gradient(circle at 20% 20%, rgba(255, 181, 72, 0.10) 0, rgba(255, 181, 72, 0.10) 2px, transparent 2px, transparent 100px),
-            radial-gradient(circle at 80% 30%, rgba(255, 140, 42, 0.08) 0, rgba(255, 140, 42, 0.08) 2px, transparent 2px, transparent 120px),
-            radial-gradient(circle at 40% 70%, rgba(255, 208, 120, 0.08) 0, rgba(255, 208, 120, 0.08) 2px, transparent 2px, transparent 110px),
-            linear-gradient(180deg, #fffdf8 0%, #fff9ef 100%);
+            radial-gradient(circle at 12% 18%, rgba(255, 179, 71, 0.20) 0%, transparent 18%),
+            radial-gradient(circle at 86% 22%, rgba(255, 140, 42, 0.14) 0%, transparent 20%),
+            radial-gradient(circle at 52% 82%, rgba(255, 214, 140, 0.15) 0%, transparent 18%),
+            linear-gradient(180deg, #fffdf8 0%, #fff6e8 100%);
         color: #2c2c2c;
     }
 
     header[data-testid="stHeader"] {
-        background: rgba(255, 255, 255, 0.86) !important;
-        backdrop-filter: blur(8px);
-        border-bottom: 1px solid #ece4d3 !important;
+        background: rgba(255,255,255,0.88) !important;
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(234, 217, 187, 0.75) !important;
+        box-shadow: 0 8px 18px rgba(0,0,0,0.04);
     }
 
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #fff8ec 0%, #fff4e3 100%) !important;
-        border-right: 1px solid #f0e1c7 !important;
+        background: linear-gradient(180deg, #fff7ea 0%, #fff1dc 100%) !important;
+        border-right: 1px solid #ead9bb !important;
+        box-shadow:
+            inset -8px 0 16px rgba(255,255,255,0.55),
+            10px 0 24px rgba(0,0,0,0.03);
     }
 
     section[data-testid="stSidebar"] * {
@@ -41,57 +45,81 @@ st.markdown("""
     }
 
     .sidebar-title {
-        font-size: 1.6rem;
+        font-size: 1.7rem;
         font-weight: 800;
         color: #1f2937;
-        margin-bottom: 14px;
+        margin-bottom: 16px;
         letter-spacing: -0.02em;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.85);
     }
 
     .hero-card {
-        background: rgba(255, 255, 255, 0.82);
-        backdrop-filter: blur(10px);
-        border: 1px solid #f0e4cf;
-        border-radius: 24px;
-        padding: 30px;
-        margin-bottom: 22px;
-        box-shadow: 0 10px 30px rgba(31, 41, 55, 0.06);
+        background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(255,247,234,0.95));
+        border: 1px solid rgba(234, 217, 187, 0.95);
+        border-radius: 30px;
+        padding: 34px;
+        margin-bottom: 26px;
+        box-shadow:
+            0 32px 60px rgba(38, 25, 4, 0.09),
+            0 10px 18px rgba(255,255,255,0.92) inset,
+            0 -10px 20px rgba(232, 196, 132, 0.12) inset;
+        transform: perspective(1400px) rotateX(1.2deg);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .hero-card:hover {
+        transform: perspective(1400px) rotateX(0deg) translateY(-4px);
+        box-shadow:
+            0 40px 80px rgba(38, 25, 4, 0.12),
+            0 10px 18px rgba(255,255,255,0.92) inset,
+            0 -10px 20px rgba(232, 196, 132, 0.12) inset;
     }
 
     .hero-title {
         font-size: 3rem;
         font-weight: 800;
-        color: #222222;
+        color: #262626;
         margin-bottom: 8px;
         line-height: 1.05;
         letter-spacing: -0.03em;
+        text-shadow: 0 2px 0 rgba(255,255,255,0.7);
     }
 
     .hero-subtitle {
         color: #6f6f6f;
-        font-size: 1.04rem;
-    }
-
-    .section-label {
-        font-weight: 700;
-        color: #3c3c3c;
-        margin: 8px 0 10px 0;
         font-size: 1.05rem;
     }
 
+    .section-label {
+        font-weight: 800;
+        color: #3a3227;
+        margin: 10px 0 10px 0;
+        font-size: 1.08rem;
+    }
+
     .info-card {
-        background: rgba(255, 255, 255, 0.75);
-        border: 1px solid #f0e4cf;
-        border-radius: 16px;
-        padding: 14px 16px;
-        margin-bottom: 12px;
+        background: linear-gradient(145deg, #ffffff, #fff7ea);
+        border: 1px solid #ead9bb;
+        border-radius: 20px;
+        padding: 16px 18px;
+        margin-bottom: 14px;
         color: #3f3f3f;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
-        font-size: 0.98rem;
+        box-shadow:
+            0 14px 28px rgba(0,0,0,0.05),
+            0 2px 0 rgba(255,255,255,0.88) inset;
+        transform: translateY(0) scale(1);
+        transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .info-card:hover {
+        transform: translateY(-8px) scale(1.01);
+        box-shadow:
+            0 24px 44px rgba(0,0,0,0.08),
+            0 2px 0 rgba(255,255,255,0.88) inset;
     }
 
     .info-card b {
-        font-size: 1.06rem;
+        font-size: 1.08rem;
         font-weight: 700;
         color: #111827;
     }
@@ -99,37 +127,45 @@ st.markdown("""
     .quick-note {
         color: #777777;
         font-size: 0.95rem;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
     }
 
     .stButton > button {
         width: 100%;
-        background: rgba(255, 255, 255, 0.78) !important;
+        background: linear-gradient(145deg, #ffffff, #fff2df) !important;
         color: #333333 !important;
-        border: 1px solid #f0e4cf !important;
-        border-radius: 14px !important;
-        font-weight: 600 !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        border: 1px solid #ead9bb !important;
+        border-radius: 16px !important;
+        font-weight: 700 !important;
+        box-shadow:
+            0 10px 18px rgba(0,0,0,0.05),
+            0 2px 0 rgba(255,255,255,0.92) inset !important;
+        transition: all 0.2s ease !important;
     }
 
     .stButton > button:hover {
-        background: #ff922b !important;
+        background: linear-gradient(145deg, #ffb14a, #ff922b) !important;
         color: white !important;
         border-color: #ff922b !important;
+        transform: translateY(-6px) scale(1.02);
+        box-shadow:
+            0 22px 30px rgba(255, 146, 43, 0.25),
+            0 2px 0 rgba(255,255,255,0.18) inset !important;
     }
 
     .chat-shell {
-        background: rgba(255, 255, 255, 0.58);
-        backdrop-filter: blur(10px);
-        border: 1px solid #f0e4cf;
-        border-radius: 24px;
-        padding: 20px 20px 6px 20px;
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.04);
+        background: linear-gradient(145deg, rgba(255,255,255,0.84), rgba(255,246,231,0.80));
+        border: 1px solid rgba(234, 217, 187, 0.95);
+        border-radius: 30px;
+        padding: 22px 22px 8px 22px;
+        box-shadow:
+            0 28px 50px rgba(0,0,0,0.05),
+            0 10px 16px rgba(255,255,255,0.88) inset;
     }
 
     .message-row {
         display: flex;
-        margin: 14px 0;
+        margin: 16px 0;
         width: 100%;
     }
 
@@ -143,7 +179,7 @@ st.markdown("""
 
     .message-wrap {
         display: flex;
-        gap: 10px;
+        gap: 12px;
         align-items: flex-end;
         max-width: 78%;
     }
@@ -153,49 +189,67 @@ st.markdown("""
     }
 
     .avatar-bot, .avatar-user {
-        width: 34px;
-        height: 34px;
-        min-width: 34px;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 800;
-        font-size: 0.92rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+        font-size: 0.95rem;
+        box-shadow:
+            0 12px 20px rgba(0,0,0,0.14),
+            0 2px 0 rgba(255,255,255,0.35) inset;
+        transition: transform 0.2s ease;
+    }
+
+    .avatar-bot:hover, .avatar-user:hover {
+        transform: translateY(-3px) scale(1.05);
     }
 
     .avatar-bot {
-        background: #ff922b;
+        background: linear-gradient(145deg, #ffb14a, #ff922b);
         color: white;
     }
 
     .avatar-user {
-        background: #1f2937;
+        background: linear-gradient(145deg, #333949, #1f2230);
         color: white;
     }
 
     .bubble {
-        padding: 14px 16px;
-        border-radius: 18px;
-        font-size: 0.98rem;
+        padding: 15px 18px;
+        border-radius: 22px;
+        font-size: 0.99rem;
         line-height: 1.65;
         word-break: break-word;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+        transform: translateY(0);
+        transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .bubble:hover {
+        transform: translateY(-6px) scale(1.01);
     }
 
     .bubble.assistant {
-        background: #fff8ec;
-        border: 1px solid #f0e4cf;
+        background: linear-gradient(145deg, #fffaf1, #fff1dd);
+        border: 1px solid #ecdcbc;
         color: #2f2f2f;
-        border-bottom-left-radius: 6px;
+        border-bottom-left-radius: 8px;
+        box-shadow:
+            0 14px 24px rgba(0,0,0,0.05),
+            0 2px 0 rgba(255,255,255,0.72) inset;
     }
 
     .bubble.user {
-        background: #ff922b;
+        background: linear-gradient(145deg, #ffad45, #ff922b);
         border: 1px solid #ff922b;
         color: white;
-        border-bottom-right-radius: 6px;
+        border-bottom-right-radius: 8px;
+        box-shadow:
+            0 18px 30px rgba(255, 146, 43, 0.26),
+            0 2px 0 rgba(255,255,255,0.15) inset;
     }
 
     div[data-testid="stChatInput"] {
@@ -203,18 +257,22 @@ st.markdown("""
     }
 
     div[data-testid="stChatInput"] > div {
-        background: #1f2230 !important;
-        border-radius: 18px !important;
+        background: linear-gradient(145deg, #2b3040, #1f2230) !important;
+        border-radius: 22px !important;
         padding: 14px !important;
         border: none !important;
+        box-shadow:
+            0 18px 32px rgba(0,0,0,0.18),
+            0 2px 0 rgba(255,255,255,0.04) inset !important;
     }
 
     div[data-testid="stChatInput"] textarea {
         background: #ffffff !important;
         color: #000000 !important;
         border: 1px solid #e6d7bf !important;
-        border-radius: 12px !important;
+        border-radius: 14px !important;
         opacity: 1 !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05) inset;
     }
 
     div[data-testid="stChatInput"] textarea::placeholder {
@@ -223,26 +281,31 @@ st.markdown("""
     }
 
     div[data-testid="stChatInput"] button {
-        background: #ff922b !important;
+        background: linear-gradient(145deg, #ffb14a, #ff922b) !important;
         color: #ffffff !important;
-        border-radius: 12px !important;
+        border-radius: 14px !important;
         border: none !important;
+        box-shadow:
+            0 12px 20px rgba(255, 146, 43, 0.28),
+            0 2px 0 rgba(255,255,255,0.18) inset !important;
+        transition: transform 0.2s ease !important;
     }
 
     div[data-testid="stChatInput"] button:hover {
-        background: #e97e13 !important;
+        background: linear-gradient(145deg, #ff9d31, #e97e13) !important;
         color: #ffffff !important;
+        transform: translateY(-2px) scale(1.03);
     }
 
     .stSuccess {
         background: #eefbf0 !important;
         color: #216b2f !important;
         border: 1px solid #cce8d2 !important;
-        border-radius: 12px !important;
+        border-radius: 14px !important;
     }
 
     .stAlert {
-        border-radius: 12px !important;
+        border-radius: 14px !important;
     }
 
     span, label, p, h1, h2, h3, h4, h5, h6, div {
@@ -410,18 +473,13 @@ with center:
 
     if user_input:
         st.session_state.chat_history.append({"role": "user", "content": user_input})
-        render_message("user", user_input)
 
         try:
             response = process_message(st.session_state.agent_state, user_input)
-
             st.session_state.chat_history.append({"role": "assistant", "content": response})
-            render_message("assistant", response)
-
-            if st.session_state.agent_state.get("lead_captured", False):
-                st.success("Lead captured successfully.")
+            st.rerun()
 
         except Exception as e:
             error_message = f"An error occurred: {str(e)}"
             st.session_state.chat_history.append({"role": "assistant", "content": error_message})
-            st.error(error_message)
+            st.rerun()
