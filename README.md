@@ -10,7 +10,7 @@ Conversational AI agent for the ServiceHive Inflx assignment.
 - Frontend UI (3D experience) connected to backend chat API
 
 ## Demo Video
-- YouTube Demo (2–3 min): https://youtu.be/YYicwWerD9Y
+- YouTube Demo : https://youtu.be/YYicwWerD9Y
 
 ## Screenshots
 ### Landing Page
