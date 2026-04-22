@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from threading import Lock
@@ -10,6 +11,11 @@ from uuid import uuid4
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+
+try:
+    from google import genai
+except Exception:  # pragma: no cover
+    genai = None
 
 
 def load_knowledge_base() -> Dict:
@@ -151,6 +157,44 @@ def retrieve_answer(user_message: str) -> str:
     return "Sorry, that detail is not available in the current knowledge base."
 
 
+def retrieve_answer_with_llm(user_message: str) -> str:
+    api_key = os.getenv("GOOGLE_API_KEY", "").strip()
+    if not api_key or genai is None:
+        return retrieve_answer(user_message)
+
+    context_lines = []
+    for plan in KB.get("plans", []):
+        context_lines.append(
+            f"{plan.get('name')}: price={plan.get('price')}, "
+            f"videos={plan.get('videos_per_month')}, "
+            f"resolution={plan.get('resolution')}, "
+            f"features={', '.join(plan.get('features', [])) or 'none'}"
+        )
+    for policy in KB.get("policies", []):
+        context_lines.append(f"policy={policy}")
+
+    prompt = (
+        "You are an AI sales assistant for AutoStream.\n"
+        "Answer using ONLY this context. If unavailable, reply exactly:\n"
+        "Sorry, that detail is not available in the current knowledge base.\n\n"
+        f"Context:\n{chr(10).join(context_lines)}\n\n"
+        f"User question:\n{user_message}\n"
+    )
+
+    try:
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt,
+        )
+        if hasattr(response, "text") and response.text:
+            return response.text.strip()
+    except Exception:
+        pass
+
+    return retrieve_answer(user_message)
+
+
 def _new_agent_state() -> Dict:
     return {
         "messages": [],
@@ -247,7 +291,7 @@ def process_message(state: Dict, user_message: str) -> str:
         return "Hi! I can help with AutoStream pricing, features, refunds, and sign-up."
 
     if intent == "product_inquiry":
-        return retrieve_answer(normalized_message)
+        return retrieve_answer_with_llm(normalized_message)
 
     if intent == "high_intent_lead":
         state["lead_stage"] = "awaiting_name"
