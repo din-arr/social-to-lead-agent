@@ -57,8 +57,6 @@ def build_documents() -> List[str]:
     for policy in policies:
         docs.append(f"Company policy: {policy}.")
 
-    docs.append("24/7 support is available only on the Pro plan.")
-
     return docs
 
 
@@ -79,6 +77,16 @@ def build_vector_store():
 
 def ensure_vector_store():
     if not os.path.exists(INDEX_PATH) or not os.path.exists(DOCS_PATH):
+        build_vector_store()
+        return
+
+    expected_docs = build_documents()
+    try:
+        with open(DOCS_PATH, "rb") as file:
+            cached_docs = pickle.load(file)
+        if cached_docs != expected_docs:
+            build_vector_store()
+    except Exception:
         build_vector_store()
 
 
@@ -167,7 +175,7 @@ Give a short, clear, professional answer.
     try:
         client = get_genai_client()
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-1.5-flash",
             contents=prompt
         )
 
