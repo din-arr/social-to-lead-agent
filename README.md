@@ -9,6 +9,16 @@ Conversational AI agent for the ServiceHive Inflx assignment.
 - `requirements.txt` with Python dependencies
 - Frontend UI (3D experience) connected to backend chat API
 
+## Demo Video
+- YouTube Demo (2–3 min): https://youtu.be/YYicwWerD9Y
+
+## Screenshots
+### Landing Page
+![Landing Page](docs/screenshots/landing-page.png)
+
+### Live Agent Console
+![Live Agent Console](docs/screenshots/live-console.png)
+
 ## Project Structure
 - `agent/intent.py`: intent classification (`greeting`, `product_inquiry`, `high_intent_lead`)
 - `agent/rag.py`: retrieval + answer generation (with fallback)
